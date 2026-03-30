@@ -30,9 +30,9 @@ smoothness = st.slider(
 # MediaPipe pose model complexity (trade-off: accuracy vs speed).
 model_complexity = st.slider(
     "Model complexity",
-    min_value=0,
+    min_value=1,
     max_value=2,
-    value=0,
+    value=1,
     step=1,
 )
 

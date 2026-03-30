@@ -17,12 +17,24 @@ class PoseDetector:
         Higher alpha follows previous landmarks more (smoother but less responsive).
         model_complexity: MediaPipe pose model complexity (0, 1, 2).
         """
-        self.pose = mp_pose.Pose(
-            model_complexity=max(0, min(int(model_complexity), 2)),  # 0,1,2
-            smooth_landmarks=True,
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.7
-        )
+        safe_complexity = max(0, min(int(model_complexity), 2))
+        try:
+            self.pose = mp_pose.Pose(
+                model_complexity=safe_complexity,  # 0,1,2
+                smooth_landmarks=True,
+                min_detection_confidence=0.5,
+                min_tracking_confidence=0.7
+            )
+        except PermissionError:
+            # Some cloud hosts mount site-packages read-only, and MediaPipe may try
+            # to download extra models for complexity 0/2 into that directory.
+            # Fall back to complexity 1, which avoids that download path.
+            self.pose = mp_pose.Pose(
+                model_complexity=1,
+                smooth_landmarks=True,
+                min_detection_confidence=0.5,
+                min_tracking_confidence=0.7
+            )
         self.prev_landmarks = None
         # Clamp to a safe range to avoid extreme behavior.
         self.alpha = max(0.05, min(float(alpha), 0.95))  # base smoothing (lower = more responsive)
